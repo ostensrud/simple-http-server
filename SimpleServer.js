@@ -17,10 +17,10 @@ status_codes[503] = 'Service Unavailable';
 
 function handleRequest(request, response) {
   try  {
-    console.log("Requested: " + request.url);
+    log("Requested: " + request.url);
     dispatcher.dispatch(request, response);
   } catch (error) {
-    console.log(error);
+    log(error);
   }
 }
 
@@ -75,15 +75,40 @@ dispatcher.onGet("/loop", function(req, res) {
   res.end();
 });
 
+function log(message) {
+  console.log(getTime() + '\t' + message);
+}
+
 function writeResponse(res, code) {
-  console.log("Response: " + code);
+  log("Response: " + code);
   res.statusCode = code;
   res.statusMessage = status_codes[code];
   if (code == 301 || code == 302) {
     res.setHeader("Location", "/200");
   }
   res.end(code + ' ' + status_codes[code]);
+
+  log("Request handled");
+  console.log(Array(81).join("="));
 };
+
+function getTime() {
+  var timestamp = new Date();
+  var month = pad(timestamp.getMonth()+1, 2);
+  var year = timestamp.getYear()+1900;
+  var date = pad(timestamp.getDate(), 2);
+  var hour = pad(timestamp.getHours(), 2);
+  var minutes = pad(timestamp.getMinutes(), 2);
+  var seconds = pad(timestamp.getSeconds(), 2);
+  var millis = timestamp.getMilliseconds();
+  
+  return year + "-" + month + "-" + date + " " + hour + ":" + minutes + ":" + seconds + "." + millis;
+}
+
+function pad(value, size) {
+  var s = "0"+value;
+  return s.substr(s.length-size);
+}
 
 var server = http.createServer(handleRequest);
 
