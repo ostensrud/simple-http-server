@@ -1,19 +1,9 @@
 var http = require('http');
 var dispatcher = require('httpdispatcher');
+var fs = require('fs');
 
 const PORT=24000;
-
 var status_codes = {};
-status_codes[200] = 'OK';
-status_codes[301] = 'Found';
-status_codes[302] = 'Moved permanently';
-status_codes[401] = 'Unauthorized';
-status_codes[403] = 'Forbidden';
-status_codes[404] = 'Not Found';
-status_codes[405] = 'Method Not Allowed';
-status_codes[500] = 'Internal Server Error';
-status_codes[502] = 'Bad Gateway';
-status_codes[503] = 'Service Unavailable';
 
 function handleRequest(request, response) {
   try  {
@@ -24,6 +14,7 @@ function handleRequest(request, response) {
   }
 }
 
+//TODO: Automatically use values from file if possible
 dispatcher.onGet("/200", function(req, res) {
   writeResponse(res, 200);
 });
@@ -79,10 +70,14 @@ function log(message) {
   console.log(getTime() + '\t' + message);
 }
 
+function warn(message) {
+  console.error(getTime() + '\t' + message);
+}
+
 function writeResponse(res, code) {
   log("Response: " + code);
   res.statusCode = code;
-  res.statusMessage = status_codes[code];
+  res.statusMessage = status_codes[code].text;
   if (code == 301 || code == 302) {
     res.setHeader("Location", "/200");
   }
@@ -110,6 +105,15 @@ function pad(value, size) {
   return s.substr(s.length-size);
 }
 
+function read_config() {
+  fs.readFile('status_codes.json','utf8', function(err, data) {
+    // TODO: Proper exception handling
+    if (err) throw err
+    status_codes = JSON.parse(data);
+  });
+}
+
+read_config();
 var server = http.createServer(handleRequest);
 
 server.listen(PORT, function() {
