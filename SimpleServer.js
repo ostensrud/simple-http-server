@@ -10,8 +10,10 @@ function handleRequest(request, response) {
   try  {
     var delay = 0;
     var parsed_url = url.parse(request.url, true);
+
     log("Request from: " + request.connection.remoteAddress + "("+ request.connection.remoteFamily + ")");
     log("Requested resource: " + parsed_url.pathname);
+
     if(parsed_url.search) {
       log("With params: " + parsed_url.search);
     }
@@ -69,7 +71,7 @@ dispatcher.onGet("/503", function(req, res) {
   writeResponse(res, 503);
 });
 
-dispatcher.onGet("/loop", function(req, res) {
+dispatcher.onGet("/redirect", function(req, res) {
   res.statusCode = 302;
   res.statusMessage = status_codes[302];
   res.setHeader("Location", "/301");
