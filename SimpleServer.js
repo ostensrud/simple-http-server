@@ -1,14 +1,28 @@
 var http = require('http');
 var dispatcher = require('httpdispatcher');
 var fs = require('fs');
+var url = require('url');
 
 const PORT=24000;
 var status_codes = {};
 
 function handleRequest(request, response) {
   try  {
-    log("Requested: " + request.url);
-    dispatcher.dispatch(request, response);
+    var delay = 0;
+    var parsed_url = url.parse(request.url, true);
+    log("Request from: " + request.connection.remoteAddress + "("+ request.connection.remoteFamily + ")");
+    log("Requested resource: " + parsed_url.pathname);
+    if(parsed_url.search) {
+      log("With params: " + parsed_url.search);
+    }
+
+    if (parsed_url.query.delay) {
+      delay = parsed_url.query.delay;
+    }
+
+    setTimeout(function() {
+      dispatcher.dispatch(request, response);
+    }, delay);
   } catch (error) {
     log(error);
   }
@@ -17,10 +31,6 @@ function handleRequest(request, response) {
 //TODO: Automatically use values from file if possible
 dispatcher.onGet("/200", function(req, res) {
   writeResponse(res, 200);
-});
-
-dispatcher.onGet("/ok_delay", function(req, res) {
-  setTimeout(function() { writeResponse(res, 200); }, 10000);
 });
 
 dispatcher.onGet("/301", function(req, res) {
@@ -81,7 +91,7 @@ function writeResponse(res, code) {
   if (code == 301 || code == 302) {
     res.setHeader("Location", "/200");
   }
-  res.end(code + ' ' + status_codes[code]);
+  res.end(code + ' ' + status_codes[code].text);
 
   log("Request handled");
   console.log(Array(81).join("="));
